@@ -9,6 +9,7 @@ C610Array c610;
 void can_init();
 void can_read();
 void can_write();
+void display_update();
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,30 +23,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   auto now = millis();
 
-  auto imu_update = M5.Imu.update();
-  if(imu_update) {
-    float ax, ay, az;
-    float gx, gy, gz;
-
-    M5.Imu.getAccel(&ax, &ay, &az);
-    M5.Imu.getGyro(&gx, &gy, &gz);
-
-    static auto last_display = now;
-    if(now - last_display > 100) {
-      M5.Display.startWrite();
-      M5.Display.setCursor(0, 0);
-
-      M5.Display.printf("Accel X = %12.6f\n", ax);
-      M5.Display.printf("Accel Y = %12.6f\n", ay);
-      M5.Display.printf("Accel Z = %12.6f\n", az);
-      M5.Display.printf("Gyro  X = %12.6f\n", gx);
-      M5.Display.printf("Gyro  Y = %12.6f\n", gy);
-      M5.Display.printf("Gyro  Z = %12.6f\n", gz);
-
-      M5.Display.endWrite();
-      last_display = now;
-    }
-  }
+  M5.Imu.update();
+  display_update();
 
   c610[0].set_current(1.0);
   can_read();
@@ -96,5 +75,30 @@ void can_write() {
     } else {
       Serial.println("Error Sending Message...");
     }
+  }
+}
+
+void display_update() {
+  auto now = millis();
+  static auto last_display = now;
+  if(now - last_display > 100) {
+    float ax, ay, az;
+    float gx, gy, gz;
+
+    M5.Imu.getAccel(&ax, &ay, &az);
+    M5.Imu.getGyro(&gx, &gy, &gz);
+
+    M5.Display.startWrite();
+    M5.Display.setCursor(0, 0);
+
+    M5.Display.printf("Accel X = %12.6f\n", ax);
+    M5.Display.printf("Accel Y = %12.6f\n", ay);
+    M5.Display.printf("Accel Z = %12.6f\n", az);
+    M5.Display.printf("Gyro  X = %12.6f\n", gx);
+    M5.Display.printf("Gyro  Y = %12.6f\n", gy);
+    M5.Display.printf("Gyro  Z = %12.6f\n", gz);
+
+    M5.Display.endWrite();
+    last_display = now;
   }
 }
