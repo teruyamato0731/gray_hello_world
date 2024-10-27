@@ -22,7 +22,7 @@ struct C610 {
   void set_current(float current) {
     raw_current_ = max / 10 * current;
   }
-  void set_raw_current(int raw_current) {
+  void set_raw_current(int16_t raw_current) {
     raw_current_ = raw_current;
   }
   uint16_t get_angle() {
@@ -58,8 +58,8 @@ struct C610Array {
   auto to_msgs() -> std::array<CANMessage, 2> const {
     uint8_t buf[16];
     for(int i = 0; i < 8; i++) {
-      buf[i] = arr_[i].get_raw_current() >> 8;
-      buf[i + 1] = arr_[i].get_raw_current() & 0xff;
+      buf[2 * i] = arr_[i].get_raw_current() >> 8;
+      buf[2 * i + 1] = arr_[i].get_raw_current() & 0xff;
     }
     return {CANMessage{0x200, buf}, CANMessage{0x1FF, buf + 8}};
   }
