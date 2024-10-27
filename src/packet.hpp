@@ -11,8 +11,9 @@ struct Sensor {
   float gyro;
 
   void encode(uint8_t* data) const {
-    memcpy(data, this, SIZE_OF_SENSOR);
-    cobs::encode(data, SIZE_OF_SENSOR);
+    memcpy(data + 1, this, SIZE_OF_SENSOR);
+    cobs::encode(data, SIZE_OF_SENSOR + 1);
+    data[SIZE_OF_SENSOR + 1] = 0x00;
   }
 };
 
