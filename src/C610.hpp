@@ -20,7 +20,10 @@ struct C610 {
   static constexpr int max = 10000;
 
   void set_current(float current) {
-    raw_current_ = current * max;
+    raw_current_ = max / 10 * current;
+  }
+  void set_raw_current(int raw_current) {
+    raw_current_ = raw_current;
   }
   uint16_t get_angle() {
     return rx_.angle;
