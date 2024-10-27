@@ -1,6 +1,7 @@
 #include <M5Unified.h>
 #include <mcp_can.h>
 #include <C610.hpp>
+#include <packet.hpp>
 
 MCP_CAN CAN0(27);    // Set CS to pin 10
 
@@ -9,14 +10,17 @@ C610Array c610;
 void can_init();
 void can_read();
 void can_write();
+void serial_write(const Sensor& s);
 void display_update();
 
 void setup() {
   // put your setup code here, to run once:
   M5.begin();
+  Serial.begin(115200);
   M5.Power.begin();
   M5.Lcd.begin();
   can_init();
+  Serial.println("M5Stack Initialized");
 }
 
 void loop() {
@@ -25,6 +29,9 @@ void loop() {
 
   M5.Imu.update();
   display_update();
+
+  Sensor s{1.2, 3.4};
+  serial_write(s);
 
   c610[0].set_current(1.0);
   can_read();
@@ -76,6 +83,17 @@ void can_write() {
       }
     }
     last_can_send = now;
+  }
+}
+
+void serial_write(const Sensor& s) {
+  auto now = millis();
+  static auto last_serial_send = now;
+  if(now - last_serial_send > 3) {
+    uint8_t buf[10];
+    s.encode(buf);
+    Serial.write(buf, sizeof(buf));
+    last_serial_send = now;
   }
 }
 
