@@ -29,11 +29,7 @@ void loop() {
   c610[0].set_current(1.0);
   can_read();
 
-  static auto last_can_send = now;
-  if(now - last_can_send > 10) {
-    can_write();
-    last_can_send = now;
-  }
+  can_write();
 }
 
 void can_init() {
@@ -67,14 +63,19 @@ byte can_write_msg(CANMessage &msg) {
 }
 
 void can_write() {
-  auto msgs = c610.to_msgs();
-  for(auto& msg : msgs) {
-    byte sndStat = can_write_msg(msg);
-    if (sndStat == CAN_OK) {
-      Serial.printf("Message Sent Successfully! ID: %d\n", msg.id);
-    } else {
-      Serial.println("Error Sending Message...");
+  auto now = millis();
+  static auto last_can_send = now;
+  if(now - last_can_send > 10) {
+    auto msgs = c610.to_msgs();
+    for(auto& msg : msgs) {
+      byte sndStat = can_write_msg(msg);
+      if (sndStat == CAN_OK) {
+        // Serial.printf("Message Sent Successfully! ID: %d\n", msg.id);
+      } else {
+        Serial.println("Error Sending Message...");
+      }
     }
+    last_can_send = now;
   }
 }
 
