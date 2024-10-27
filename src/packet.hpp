@@ -4,7 +4,17 @@
 #include <cstdint>
 #include <cobs.h>
 
+constexpr size_t SIZE_OF_CONTROL = 2;
 constexpr size_t SIZE_OF_SENSOR = 8;
+
+struct Control {
+  int16_t current;
+
+  void decode(uint8_t* data) {
+    cobs::decode(data, SIZE_OF_CONTROL + 1);
+    *this = *reinterpret_cast<const Control*>(data + 1);
+  }
+};
 
 struct Sensor {
   float encoder;
