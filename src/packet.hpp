@@ -17,7 +17,7 @@ struct Control {
 };
 
 struct Sensor {
-  float encoder;
+  int16_t encoder[2];
   float gyro;
 
   void encode(uint8_t* data) const {
@@ -26,5 +26,8 @@ struct Sensor {
     data[SIZE_OF_SENSOR + 1] = 0x00;
   }
 };
+
+static_assert(sizeof(Control) == SIZE_OF_CONTROL);
+static_assert(sizeof(Sensor) == SIZE_OF_SENSOR);
 
 #endif // PACKET_HPP

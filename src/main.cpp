@@ -30,19 +30,26 @@ void loop() {
   auto now = millis();
 
   M5.Imu.update();
-  display_update();
-
-  Sensor s{1.2, 3.4};
-  serial_write(s);
-
-  if (Control c; serial_read(c)) {
-    c610[0].set_raw_current(c.current);
-  }
-
-  c610[0].set_current(1.0);
   can_read();
 
+  float gyro[3];
+  M5.Imu.getGyro(gyro, gyro + 1, gyro + 2);
+  Sensor s{c610[0].get_rpm(), c610[1].get_rpm(), gyro[0]};
+  serial_write(s);
+
+  static auto last_receive = now;
+  if (Control c; serial_read(c)) {
+    c610[0].set_raw_current(c.current);
+    c610[1].set_raw_current(-c.current);
+    last_receive = millis();
+  } else if (now - last_receive > 100) {
+    c610[0].set_raw_current(0);
+    c610[1].set_raw_current(0);
+  }
+
   can_write();
+
+  display_update();
 }
 
 void can_init() {
@@ -129,14 +136,13 @@ void display_update() {
     M5.Display.startWrite();
     M5.Display.setCursor(0, 0);
 
-    M5.Display.printf("Accel X = % 12.3f  \n", ax);
-    M5.Display.printf("Accel Y = % 12.3f  \n", ay);
-    M5.Display.printf("Accel Z = % 12.3f  \n", az);
-    M5.Display.printf("Gyro  X = % 12.3f  \n", gx);
-    M5.Display.printf("Gyro  Y = % 12.3f  \n", gy);
-    M5.Display.printf("Gyro  Z = % 12.3f  \n", gz);
+    M5.Display.printf("Gyro  X = % 12.3f     \n", gx);
+    M5.Display.printf("Gyro  Y = % 12.3f     \n", gy);
+    M5.Display.printf("Gyro  Z = % 12.3f     \n", gz);
     M5.Display.printf("\n");
-    M5.Display.printf("Control = % 4d\n", c610[0].get_raw_current());
+    M5.Display.printf("Sensor = [% 6d, [% 6d, % 6.2f]     \n", c610[0].get_rpm(), c610[1].get_rpm(), gx);
+    M5.Display.printf("\n");
+    M5.Display.printf("Control = % 4d     \n", c610[0].get_raw_current());
     M5.Display.printf("buf: [%2x, %2x, %2x, %2x]     \n", buf[0], buf[1], buf[2], buf[3]);
 
     M5.Display.endWrite();
