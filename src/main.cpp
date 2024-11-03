@@ -113,9 +113,9 @@ bool serial_read(Control& c) {
 }
 
 void serial_write(const Sensor& s) {
-  auto now = millis();
+  auto now = micros();
   static auto last_serial_send = now;
-  if(now - last_serial_send > 3) {
+  if(now - last_serial_send > 500) {
     uint8_t buf[SIZE_OF_SENSOR + 2];
     s.encode(buf);
     Serial.write(buf, sizeof(buf));
