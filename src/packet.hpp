@@ -5,7 +5,7 @@
 #include <cobs.h>
 
 constexpr size_t SIZE_OF_CONTROL = 2;
-constexpr size_t SIZE_OF_SENSOR = 8;
+constexpr size_t SIZE_OF_SENSOR = 16;
 
 struct Control {
   int16_t current;
@@ -19,6 +19,7 @@ struct Control {
 struct Sensor {
   int16_t encoder[2];
   float gyro;
+  float acc[2];
 
   void encode(uint8_t* data) const {
     memcpy(data + 1, this, SIZE_OF_SENSOR);

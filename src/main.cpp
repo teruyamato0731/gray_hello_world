@@ -10,6 +10,7 @@ C610Array c610;
 void can_init();
 void can_read();
 void can_write();
+Sensor get_sensor();
 bool serial_read(Control& c);
 void serial_write(const Sensor& s);
 void display_update();
@@ -29,13 +30,10 @@ void loop() {
   // put your main code here, to run repeatedly:
   auto now = millis();
 
-  M5.Imu.update();
   can_read();
 
-  float gyro[3];
-  M5.Imu.getGyro(gyro, gyro + 1, gyro + 2);
-  Sensor s{c610[0].get_rpm(), c610[1].get_rpm(), gyro[0]};
-  serial_write(s);
+  auto sensor = get_sensor();
+  serial_write(sensor);
 
   static auto last_receive = now;
   if (Control c; serial_read(c)) {
@@ -110,6 +108,12 @@ bool serial_read(Control& c) {
     }
   }
   return false;
+}
+
+Sensor get_sensor() {
+  M5.Imu.update();
+  auto imu_date = M5.Imu.getImuData();
+  Sensor { {c610[0].get_rpm(), c610[1].get_rpm()}, imu_date.gyro.x, {imu_date.accel.x, imu_date.accel.y} };
 }
 
 void serial_write(const Sensor& s) {
