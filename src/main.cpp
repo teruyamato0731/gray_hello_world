@@ -140,7 +140,7 @@ void display_update() {
     M5.Display.printf("Gyro  Y = % 12.3f     \n", gy);
     M5.Display.printf("Gyro  Z = % 12.3f     \n", gz);
     M5.Display.printf("\n");
-    M5.Display.printf("Sensor = [% 6d, [% 6d, % 6.2f]     \n", c610[0].get_rpm(), c610[1].get_rpm(), gx);
+    M5.Display.printf("Sensor = [% 6d, % 6d, % 6.2f]     \n", c610[0].get_rpm(), c610[1].get_rpm(), gx);
     M5.Display.printf("\n");
     M5.Display.printf("Control = % 4d     \n", c610[0].get_raw_current());
     M5.Display.printf("buf: [%2x, %2x, %2x, %2x]     \n", buf[0], buf[1], buf[2], buf[3]);
