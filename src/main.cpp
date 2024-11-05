@@ -5,7 +5,7 @@
 
 MCP_CAN CAN0(27);    // Set CS to pin 10
 
-C610Array c610;
+C610Array c610{};
 
 void can_init();
 void can_read();
@@ -13,7 +13,7 @@ void can_write();
 Sensor get_sensor();
 bool serial_read(Control& c);
 void serial_write(const Sensor& s);
-void display_update();
+void display_update(const Sensor& s);
 
 void setup() {
   // put your setup code here, to run once:
@@ -47,7 +47,7 @@ void loop() {
 
   can_write();
 
-  display_update();
+  display_update(sensor);
 }
 
 void can_init() {
@@ -113,7 +113,7 @@ bool serial_read(Control& c) {
 Sensor get_sensor() {
   M5.Imu.update();
   auto imu_date = M5.Imu.getImuData();
-  Sensor { {c610[0].get_rpm(), c610[1].get_rpm()}, imu_date.gyro.x, {imu_date.accel.x, imu_date.accel.y} };
+  return Sensor { {c610[0].get_rpm(), c610[1].get_rpm()}, imu_date.gyro.y, {imu_date.accel.z, -imu_date.accel.x} };
 }
 
 void serial_write(const Sensor& s) {
@@ -124,28 +124,26 @@ void serial_write(const Sensor& s) {
     s.encode(buf);
     Serial.write(buf, sizeof(buf));
     last_serial_send = now;
+
+    c610[0].reset_rx();
+    c610[1].reset_rx();
   }
 }
 
-void display_update() {
+void display_update(const Sensor& s) {
   auto now = millis();
   static auto last_display = now;
   if(now - last_display > 100) {
-    float ax, ay, az;
-    float gx, gy, gz;
-
-    M5.Imu.getAccel(&ax, &ay, &az);
-    M5.Imu.getGyro(&gx, &gy, &gz);
-
     M5.Display.startWrite();
     M5.Display.setCursor(0, 0);
 
-    M5.Display.printf("Gyro  X = % 12.3f     \n", gx);
-    M5.Display.printf("Gyro  Y = % 12.3f     \n", gy);
-    M5.Display.printf("Gyro  Z = % 12.3f     \n", gz);
-    M5.Display.printf("\n");
-    M5.Display.printf("Sensor = [% 6d, % 6d, % 6.2f]     \n", c610[0].get_rpm(), c610[1].get_rpm(), gx);
-    M5.Display.printf("\n");
+    M5.Display.printf("Sensor = [\n");
+    M5.Display.printf("  E1: % 12d     \n", s.encoder[0]);
+    M5.Display.printf("  E2: % 12d     \n", s.encoder[1]);
+    M5.Display.printf("  Gz: % 12.3f     \n", s.gyro);
+    M5.Display.printf("  Az: % 12.3f     \n", s.acc[0]);
+    M5.Display.printf("  Ax: % 12.3f     \n", s.acc[1]);
+    M5.Display.printf("]\n");
     M5.Display.printf("Control = % 4d     \n", c610[0].get_raw_current());
     M5.Display.printf("buf: [%2x, %2x, %2x, %2x]     \n", buf[0], buf[1], buf[2], buf[3]);
 

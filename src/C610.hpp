@@ -37,6 +37,9 @@ struct C610 {
   int16_t get_raw_current() const {
     return raw_current_;
   }
+  void reset_rx() {
+    rx_ = {};
+  }
   void parse(const uint8_t data[8]) {
     rx_.angle = uint16_t(data[0] << 8 | data[1]);
     rx_.rpm = int16_t(data[2] << 8 | data[3]);
