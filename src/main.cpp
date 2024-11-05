@@ -33,12 +33,14 @@ void loop() {
   can_read();
 
   auto sensor = get_sensor();
-  serial_write(sensor);
+  if(sensor.enable) {
+    serial_write(sensor);
+  }
 
   static auto last_receive = now;
   if (Control c; serial_read(c)) {
-    c610[0].set_raw_current(c.current);
-    c610[1].set_raw_current(-c.current);
+    c610[0].set_raw_current(-c.current);
+    c610[1].set_raw_current(c.current);
     last_receive = millis();
   } else if (now - last_receive > 100) {
     c610[0].set_raw_current(0);
@@ -83,7 +85,7 @@ byte can_write_msg(CANMessage &msg) {
 void can_write() {
   auto now = millis();
   static auto last_can_send = now;
-  if(now - last_can_send > 10) {
+  if(now - last_can_send > 1) {
     auto msgs = c610.to_msgs();
     for(auto& msg : msgs) {
       byte sndStat = can_write_msg(msg);
@@ -113,27 +115,47 @@ bool serial_read(Control& c) {
 Sensor get_sensor() {
   M5.Imu.update();
   auto imu_date = M5.Imu.getImuData();
-  return Sensor { {c610[0].get_rpm(), c610[1].get_rpm()}, imu_date.gyro.y, {imu_date.accel.z, -imu_date.accel.x} };
+
+  static float pre_imu[3] = {};
+  static int16_t pre_encoder[2] = {};
+  float now[3] = {imu_date.gyro.y, imu_date.accel.z, -imu_date.accel.x};
+
+  uint8_t enable = 0x00;
+
+  // preとnowを比較 変化があればenableにbitを立てる
+  for(int i = 0; i < 2; i++) {
+    if(pre_encoder[i] != c610[i].get_rpm()) {
+      pre_encoder[i] = c610[i].get_rpm();
+      enable |= 1 << i;
+    }
+  }
+
+  // imuも比較
+  for(int i = 0; i < 3; i++) {
+    if(pre_imu[i] != now[i]) {
+      pre_imu[i] = now[i];
+      enable |= 1 << (i + 2);
+    }
+  }
+
+  return Sensor {
+    .enable = enable,
+    .encoder = {c610[0].get_rpm(), c610[1].get_rpm()},
+    .gyro = imu_date.gyro.y,
+    .acc = {imu_date.accel.z, -imu_date.accel.x},
+  };
 }
 
 void serial_write(const Sensor& s) {
-  auto now = micros();
-  static auto last_serial_send = now;
-  if(now - last_serial_send > 500) {
-    uint8_t buf[SIZE_OF_SENSOR + 2];
-    s.encode(buf);
-    Serial.write(buf, sizeof(buf));
-    last_serial_send = now;
-
-    c610[0].reset_rx();
-    c610[1].reset_rx();
-  }
+  uint8_t buf[SIZE_OF_SENSOR + 2];
+  s.encode(buf);
+  Serial.write(buf, sizeof(buf));
 }
 
 void display_update(const Sensor& s) {
   auto now = millis();
   static auto last_display = now;
-  if(now - last_display > 100) {
+  if(now - last_display > 500) {
     M5.Display.startWrite();
     M5.Display.setCursor(0, 0);
 

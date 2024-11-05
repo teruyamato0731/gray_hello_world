@@ -5,7 +5,7 @@
 #include <cobs.h>
 
 constexpr size_t SIZE_OF_CONTROL = 2;
-constexpr size_t SIZE_OF_SENSOR = 16;
+constexpr size_t SIZE_OF_SENSOR = 17;
 
 struct Control {
   int16_t current;
@@ -16,7 +16,8 @@ struct Control {
   }
 };
 
-struct Sensor {
+struct __attribute__ ((__packed__)) Sensor {
+  uint8_t enable;
   int16_t encoder[2];
   float gyro;
   float acc[2];
