@@ -15,6 +15,7 @@ bool serial_read(Control& c);
 void serial_write(const Sensor& s);
 void display_update(const Sensor& s);
 
+// MARK: - Main
 void setup() {
   // put your setup code here, to run once:
   M5.begin();
@@ -52,6 +53,7 @@ void loop() {
   display_update(sensor);
 }
 
+// MARK: - CAN
 void can_init() {
   // Initialize MCP2515 running at 16MHz with a baudrate of 500kb/s and the
   // masks and filters disabled.
@@ -99,6 +101,7 @@ void can_write() {
   }
 }
 
+// MARK: - UART
 constexpr size_t buf_size = 8;
 uint8_t buf[buf_size] = {0xde, 0xad, 0xbe, 0xef};
 bool serial_read(Control& c) {
@@ -112,6 +115,13 @@ bool serial_read(Control& c) {
   return false;
 }
 
+void serial_write(const Sensor& s) {
+  uint8_t buf[SIZE_OF_SENSOR + 2];
+  s.encode(buf);
+  Serial.write(buf, sizeof(buf));
+}
+
+// MARK: - Sensor
 Sensor get_sensor() {
   M5.Imu.update();
   auto imu_date = M5.Imu.getImuData();
@@ -146,12 +156,7 @@ Sensor get_sensor() {
   };
 }
 
-void serial_write(const Sensor& s) {
-  uint8_t buf[SIZE_OF_SENSOR + 2];
-  s.encode(buf);
-  Serial.write(buf, sizeof(buf));
-}
-
+// MARK: - Display
 void display_update(const Sensor& s) {
   auto now = millis();
   static auto last_display = now;
