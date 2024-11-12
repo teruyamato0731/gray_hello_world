@@ -40,8 +40,8 @@ void loop() {
 
   static auto last_receive = now;
   if (Control c; serial_read(c)) {
-    c610[0].set_raw_current(-c.current);
-    c610[1].set_raw_current(c.current);
+    c610[0].set_raw_current(c.current);
+    c610[1].set_raw_current(-c.current);
     last_receive = millis();
   } else if (now - last_receive > 100) {
     c610[0].set_raw_current(0);
