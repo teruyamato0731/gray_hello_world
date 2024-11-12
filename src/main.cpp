@@ -133,18 +133,23 @@ Sensor get_sensor() {
   uint8_t enable = 0x00;
 
   // preとnowを比較 変化があればenableにbitを立てる
-  for(int i = 0; i < 2; i++) {
-    if(pre_encoder[i] != c610[i].get_rpm()) {
-      pre_encoder[i] = c610[i].get_rpm();
-      enable |= 1 << i;
-    }
-  }
-
-  // imuも比較
   for(int i = 0; i < 3; i++) {
     if(pre_imu[i] != now[i]) {
       pre_imu[i] = now[i];
       enable |= 1 << (i + 2);
+    }
+  }
+
+  // Imu がなければそのまま返す
+  if(!enable) {
+    return Sensor { .enable = 0x00 };
+  }
+
+  // エンコーダも比較
+  for(int i = 0; i < 2; i++) {
+    if(pre_encoder[i] != c610[i].get_rpm()) {
+      pre_encoder[i] = c610[i].get_rpm();
+      enable |= 1 << i;
     }
   }
 
