@@ -140,11 +140,6 @@ Sensor get_sensor() {
     }
   }
 
-  // Imu がなければそのまま返す
-  if(!enable) {
-    return Sensor { .enable = 0x00 };
-  }
-
   // エンコーダも比較
   for(int i = 0; i < 2; i++) {
     if(pre_encoder[i] != c610[i].get_rpm()) {
